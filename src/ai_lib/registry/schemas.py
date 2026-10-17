@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-Provider = Literal["gemini", "groq"]
+Provider = Literal["gemini", "groq", "openai"]
 Purpose = Literal["chat", "vision", "embedding"]
 Outcome = Literal["ok", "rate_limited", "invalid"]
 
