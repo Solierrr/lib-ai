@@ -22,6 +22,11 @@ DEFAULT_COOLDOWN_SECONDS = 60.0
 MAX_NUMBERED_KEYS = 9
 
 
+def _usable(value: str) -> bool:
+    # Marcadores do Infisical ainda não preenchidos (ex.: __preencher__) não são chaves.
+    return bool(value) and not value.startswith("__") and "preencher" not in value.lower()
+
+
 def _read_keys(provider: str, env: Mapping[str, str]) -> list[str]:
     name = provider.upper()
     keys: list[str] = []
@@ -33,11 +38,11 @@ def _read_keys(provider: str, env: Mapping[str, str]) -> list[str]:
     ]
     for variable in (f"{name}_API_KEY", *numbered):
         value = (env.get(variable) or "").strip()
-        if value and value not in keys:
+        if _usable(value) and value not in keys:
             keys.append(value)
     for value in (env.get(f"{name}_API_KEYS") or "").split(","):
         value = value.strip()
-        if value and value not in keys:
+        if _usable(value) and value not in keys:
             keys.append(value)
     return keys
 

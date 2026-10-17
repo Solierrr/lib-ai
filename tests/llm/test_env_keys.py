@@ -108,3 +108,8 @@ def test_default_client_prefers_env_when_registry_is_not_configured(monkeypatch)
 def test_reads_the_infisical_naming_without_underscore():
     client = EnvKeyClient({"GEMINI_API_KEY": "a", "GEMINI_API_KEY2": "b", "GEMINI_API_KEY3": "c"})
     assert [client.lease(provider="gemini").api_key for _ in range(3)] == ["a", "b", "c"]
+
+
+def test_unfilled_infisical_placeholders_are_not_keys():
+    client = EnvKeyClient({"OPENAI_API_KEY": "__preencher__", "GROQ_API_KEY": "g"})
+    assert client.providers() == ["groq"]
