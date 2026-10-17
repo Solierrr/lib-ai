@@ -55,9 +55,12 @@ def _build_groq(lease: KeyLease, model: str, temperature: float, kwargs: dict) -
 def _build_openai(lease: KeyLease, model: str, temperature: float, kwargs: dict) -> Any:
     from langchain_openai import ChatOpenAI
 
+    # Os modelos atuais da OpenAI só aceitam a temperatura padrão (400 com qualquer outro valor):
+    # ela só é enviada quando pedida em LLM_TEMPERATURE_OPENAI.
+    override = os.environ.get("LLM_TEMPERATURE_OPENAI")
     return ChatOpenAI(
         model=model,
-        temperature=temperature,
+        temperature=float(override) if override else None,
         api_key=lease.api_key,
         **{"max_retries": 0, **kwargs},
     )
