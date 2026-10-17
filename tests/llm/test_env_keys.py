@@ -113,3 +113,20 @@ def test_reads_the_infisical_naming_without_underscore():
 def test_unfilled_infisical_placeholders_are_not_keys():
     client = EnvKeyClient({"OPENAI_API_KEY": "__preencher__", "GROQ_API_KEY": "g"})
     assert client.providers() == ["groq"]
+
+
+def test_openai_does_not_send_the_default_temperature_of_the_caller(monkeypatch):
+    from ai_lib.llm.chat import _build_openai
+    from ai_lib.registry import KeyLease
+
+    lease = KeyLease(
+        provider="openai",
+        key_id="openai:0",
+        api_key="k",
+        base_url="https://api.openai.com/v1",
+        auth_header={"name": "Authorization", "value": "Bearer k"},
+    )
+    monkeypatch.delenv("LLM_TEMPERATURE_OPENAI", raising=False)
+    assert _build_openai(lease, "gpt-6-luna", 0.7, {}).temperature is None
+    monkeypatch.setenv("LLM_TEMPERATURE_OPENAI", "1")
+    assert _build_openai(lease, "gpt-6-luna", 0.7, {}).temperature == 1.0
