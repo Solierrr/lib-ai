@@ -1,3 +1,4 @@
+import os
 from collections.abc import Callable
 from typing import Any
 
@@ -8,6 +9,7 @@ from langchain_core.outputs import ChatGeneration, ChatResult
 from langchain_core.runnables import Runnable, RunnableConfig, RunnableLambda
 from pydantic import ConfigDict, Field
 
+from ai_lib.llm.env_keys import provider_order
 from ai_lib.llm.leasing import KeyLeaser
 from ai_lib.registry import KeyLease, Provider, Purpose, RegistryClient
 
@@ -15,6 +17,17 @@ DEFAULT_MODELS: dict[str, str] = {
     "gemini": "gemini-2.5-flash",
     "groq": "openai/gpt-oss-120b",
 }
+
+# O modelo da OpenAI não tem padrão: vem de LLM_MODEL_OPENAI (ou do argumento model).
+MODEL_ENV_PREFIX = "LLM_MODEL_"
+
+
+def resolve_model(provider: str, model: str | None = None) -> str:
+    variable = f"{MODEL_ENV_PREFIX}{provider.upper()}"
+    chosen = model or os.environ.get(variable) or DEFAULT_MODELS.get(provider)
+    if not chosen:
+        raise ValueError(f"no model configured for {provider}: set {variable} or pass model=")
+    return chosen
 
 
 def _build_gemini(lease: KeyLease, model: str, temperature: float, kwargs: dict) -> Any:
@@ -39,9 +52,21 @@ def _build_groq(lease: KeyLease, model: str, temperature: float, kwargs: dict) -
     )
 
 
+def _build_openai(lease: KeyLease, model: str, temperature: float, kwargs: dict) -> Any:
+    from langchain_openai import ChatOpenAI
+
+    return ChatOpenAI(
+        model=model,
+        temperature=temperature,
+        api_key=lease.api_key,
+        **{"max_retries": 0, **kwargs},
+    )
+
+
 BUILDERS: dict[str, Callable[[KeyLease, str, float, dict], Any]] = {
     "gemini": _build_gemini,
     "groq": _build_groq,
+    "openai": _build_openai,
 }
 
 
@@ -149,7 +174,7 @@ def get_chat_model(
 ) -> LeasedChatModel:
     return LeasedChatModel(
         provider=provider,
-        model_name=model or DEFAULT_MODELS[provider],
+        model_name=resolve_model(provider, model),
         temperature=temperature,
         purpose=purpose,
         registry=client,
@@ -181,3 +206,20 @@ def get_chat_model_with_fallback(
             )
         ]
     )
+
+
+def get_chat_model_from_env(
+    *,
+    temperature: float = 0.7,
+    purpose: Purpose | None = "chat",
+    client: Any = None,
+) -> Runnable:
+    """Builds the provider chain from LLM_PROVIDER_ORDER and the keys present in the environment."""
+    order = provider_order()
+    if not order:
+        raise ValueError("no LLM provider has an API key in the environment")
+    models = [
+        get_chat_model(provider, temperature=temperature, purpose=purpose, client=client)
+        for provider in order
+    ]
+    return models[0].with_fallbacks(models[1:]) if len(models) > 1 else models[0]
