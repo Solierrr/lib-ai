@@ -25,10 +25,13 @@ MAX_NUMBERED_KEYS = 9
 def _read_keys(provider: str, env: Mapping[str, str]) -> list[str]:
     name = provider.upper()
     keys: list[str] = []
-    for variable in (
-        f"{name}_API_KEY",
-        *(f"{name}_API_KEY_{n}" for n in range(2, MAX_NUMBERED_KEYS + 1)),
-    ):
+    # Aceita _2 e também o formato já usado no Infisical (GEMINI_API_KEY2, GROQ_API_KEY3).
+    numbered = [
+        variable
+        for n in range(2, MAX_NUMBERED_KEYS + 1)
+        for variable in (f"{name}_API_KEY_{n}", f"{name}_API_KEY{n}")
+    ]
+    for variable in (f"{name}_API_KEY", *numbered):
         value = (env.get(variable) or "").strip()
         if value and value not in keys:
             keys.append(value)
