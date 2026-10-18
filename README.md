@@ -4,6 +4,7 @@ Blocos compartilhados dos serviços de IA da Solaria. Publicado no PyPI como `so
 
 ```bash
 pip install solaria-lib
+pip install "solaria-lib[a2a]"   # para usar ai_lib.a2a
 ```
 
 ## O que tem
@@ -15,6 +16,7 @@ pip install solaria-lib
 | `ai_lib.guardrails` | Anonimização de PII, detecção de injection, parsers de veredito e nós LangGraph de entrada, saída e juiz |
 | `ai_lib.security` | `decode_user_id` (JWT RS256 via JWKS) |
 | `ai_lib.observability` | `StepTracker`, callback LangChain que mede custo, tokens e latência |
+| `ai_lib.a2a` | Agent2Agent 1.0 (extra `a2a`): `build_agent_card`, `TurnExecutor` e `mount_a2a` para receber delegações, `delegate` para delegar repassando o JWT do usuário e a persona |
 
 ## Configuração
 
