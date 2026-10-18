@@ -1,7 +1,8 @@
 import pytest
 
 from ai_lib.llm import leasing
-from ai_lib.registry import RegistryClient, RegistryError
+from ai_lib.llm.env_keys import EnvKeyClient
+from ai_lib.registry import RegistryKeysNotConfigured
 
 
 @pytest.fixture(autouse=True)
@@ -11,27 +12,29 @@ def clean_default_client():
     leasing.reset_default_client()
 
 
-def test_default_client_is_built_from_the_environment_once(monkeypatch):
-    monkeypatch.setenv("REGISTRY_URL", "https://registry.test")
-    monkeypatch.setenv("REGISTRY_CONSUMER_TOKEN", "token")
+def test_default_client_reads_the_environment_once(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "gem-key")
 
     first = leasing.default_client()
 
-    assert isinstance(first, RegistryClient)
+    assert isinstance(first, EnvKeyClient)
+    assert first.providers() == ["gemini"]
     assert leasing.default_client() is first
 
 
-def test_default_client_requires_configuration(monkeypatch):
-    monkeypatch.delenv("REGISTRY_URL", raising=False)
-    monkeypatch.delenv("REGISTRY_CONSUMER_TOKEN", raising=False)
+def test_default_client_without_keys_fails_when_a_key_is_requested(monkeypatch):
+    for name in ("GEMINI_API_KEY", "GROQ_API_KEY", "OPENAI_API_KEY"):
+        monkeypatch.delenv(name, raising=False)
 
-    with pytest.raises(RegistryError):
-        leasing.default_client()
+    client = leasing.default_client()
+
+    assert client.providers() == []
+    with pytest.raises(RegistryKeysNotConfigured):
+        client.lease(provider="gemini")
 
 
 def test_reset_drops_the_cached_client(monkeypatch):
-    monkeypatch.setenv("REGISTRY_URL", "https://registry.test")
-    monkeypatch.setenv("REGISTRY_CONSUMER_TOKEN", "token")
+    monkeypatch.setenv("GEMINI_API_KEY", "gem-key")
     first = leasing.default_client()
 
     leasing.reset_default_client()

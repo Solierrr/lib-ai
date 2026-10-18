@@ -9,9 +9,9 @@ from langchain_core.outputs import ChatGeneration, ChatResult
 from langchain_core.runnables import Runnable, RunnableConfig, RunnableLambda
 from pydantic import ConfigDict, Field
 
-from ai_lib.llm.env_keys import provider_order
+from ai_lib.llm.env_keys import EnvKeyClient, provider_order
 from ai_lib.llm.leasing import KeyLeaser
-from ai_lib.registry import KeyLease, Provider, Purpose, RegistryClient
+from ai_lib.registry import KeyLease, Provider, Purpose
 
 DEFAULT_MODELS: dict[str, str] = {
     "gemini": "gemini-2.5-flash",
@@ -171,7 +171,7 @@ def get_chat_model(
     model: str | None = None,
     temperature: float = 0.7,
     purpose: Purpose | None = "chat",
-    client: RegistryClient | None = None,
+    client: EnvKeyClient | None = None,
     max_key_attempts: int = 3,
     **model_kwargs: Any,
 ) -> LeasedChatModel:
@@ -194,7 +194,7 @@ def get_chat_model_with_fallback(
     fallback_model: str | None = None,
     temperature: float = 0.7,
     purpose: Purpose | None = "chat",
-    client: RegistryClient | None = None,
+    client: EnvKeyClient | None = None,
 ) -> Runnable:
     return get_chat_model(
         primary, model=primary_model, temperature=temperature, purpose=purpose, client=client

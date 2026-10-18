@@ -65,7 +65,7 @@ def provider_order(env: Mapping[str, str] | None = None) -> list[Provider]:
 
 
 class EnvKeyClient:
-    """Serves keys read from environment variables, with the RegistryClient interface.
+    """Serves keys read from environment variables, through `lease` and `report`.
 
     Each provider reads <PROVIDER>_API_KEY, <PROVIDER>_API_KEY_2 to _9 and the comma
     separated <PROVIDER>_API_KEYS. Keys rotate round-robin; a key that hits a rate

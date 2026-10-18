@@ -1,4 +1,8 @@
-from ai_lib.registry.client import RegistryClient, RetryPolicy
+"""Tipos e erros das chaves de LLM: `KeyLease`, `Provider`, `Purpose`, `Outcome` e as exceções
+`Registry*`. O nome vem da época em que as chaves eram servidas pelo google-registry; hoje elas
+vêm do ambiente (`ai_lib.llm.EnvKeyClient`) e este pacote só guarda os tipos que as duas
+pontas compartilharam."""
+
 from ai_lib.registry.errors import (
     RegistryAuthError,
     RegistryError,
@@ -15,10 +19,8 @@ __all__ = [
     "Provider",
     "Purpose",
     "RegistryAuthError",
-    "RegistryClient",
     "RegistryError",
     "RegistryKeysNotConfigured",
     "RegistryKeysUnavailable",
     "RegistryUnreachable",
-    "RetryPolicy",
 ]
