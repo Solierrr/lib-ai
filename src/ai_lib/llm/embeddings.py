@@ -2,8 +2,9 @@ from typing import Any
 
 from langchain_core.embeddings import Embeddings
 
+from ai_lib.llm.env_keys import EnvKeyClient
 from ai_lib.llm.leasing import KeyLeaser
-from ai_lib.registry import KeyLease, RegistryClient
+from ai_lib.registry import KeyLease
 
 DEFAULT_EMBEDDING_MODEL = "models/gemini-embedding-001"
 
@@ -13,7 +14,7 @@ class LeasedEmbeddings(Embeddings):
         self,
         model: str = DEFAULT_EMBEDDING_MODEL,
         *,
-        client: RegistryClient | None = None,
+        client: EnvKeyClient | None = None,
         max_key_attempts: int = 3,
         **kwargs: Any,
     ) -> None:

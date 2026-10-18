@@ -11,8 +11,8 @@ pip install "solaria-lib[a2a]"   # para usar ai_lib.a2a
 
 | Módulo | Conteúdo |
 |---|---|
-| `ai_lib.registry` | Cliente do corretor de chaves do `google-registry` (`GET /v1/llm/keys`, `POST /v1/llm/keys/{id}/report`) |
-| `ai_lib.llm` | Chat model LangChain que pede uma chave ao corretor a cada chamada, `LeasedEmbeddings`, tabela de preços |
+| `ai_lib.registry` | Tipos e erros das chaves de LLM (`KeyLease`, `Provider`, `RegistryKeysNotConfigured`...); o nome é herança da época em que as chaves vinham do `google-registry` |
+| `ai_lib.llm` | Chat model LangChain que pega uma chave do ambiente a cada chamada (`EnvKeyClient`, com rodízio e descanso em 429), `LeasedEmbeddings`, tabela de preços |
 | `ai_lib.guardrails` | Anonimização de PII, detecção de injection, parsers de veredito e nós LangGraph de entrada, saída e juiz |
 | `ai_lib.security` | `decode_user_id` (JWT RS256 via JWKS) |
 | `ai_lib.observability` | `StepTracker`, callback LangChain que mede custo, tokens e latência |
@@ -20,14 +20,15 @@ pip install "solaria-lib[a2a]"   # para usar ai_lib.a2a
 
 ## Configuração
 
-Só o `google-registry` tem as chaves de LLM. Os serviços recebem duas variáveis:
+As chaves vêm do ambiente (no Solaria, do Infisical), uma por provedor:
 
 | Variável | Uso |
 |---|---|
-| `REGISTRY_URL` | URL base do `google-registry` |
-| `REGISTRY_CONSUMER_TOKEN` | Token de consumidor (`Authorization: Bearer`) |
+| `GEMINI_API_KEY`, `GROQ_API_KEY`, `OPENAI_API_KEY` | Chave de cada provedor (também `<PROVEDOR>_API_KEY_2` a `_9` e `<PROVEDOR>_API_KEYS`, separadas por vírgula) |
+| `LLM_PROVIDER_ORDER` | Ordem de uso e de fallback entre provedores, por exemplo `gemini,groq,openai` |
+| `LLM_MODEL_OPENAI` | Modelo do provedor OpenAI (obrigatório para usá-lo) |
 
-Não existe fallback para chave local: se o registry não responde, a chamada falha.
+Sem chave para o provedor pedido, a chamada falha com `RegistryKeysNotConfigured`.
 
 ## Uso
 
@@ -41,11 +42,7 @@ groq = get_chat_model("groq", model="openai/gpt-oss-120b")
 structured = get_chat_model("gemini", purpose="vision").with_structured_output(MySchema)
 ```
 
-Cada chamada pede uma chave, reporta `ok`, `rate_limited` ou `invalid` ao registry e, em 429, repete com outra chave (`exclude`). `bind_tools` e `with_structured_output` funcionam como no LangChain.
-
-### Política de falha do registry
-
-Timeout de 10 s por chamada. Em erro de conexão ou 503 sem `Retry-After`: até 3 tentativas com espera crescente (teto de 60 s). Em 503 com `Retry-After`: espera (máx. 30 s) e tenta mais uma vez. Em 401 e 404: falha na hora. Todos os valores vêm de `ai_lib.registry.RetryPolicy`.
+Cada chamada pede uma chave, reporta `ok`, `rate_limited` ou `invalid` ao `EnvKeyClient` e, em 429, repete com outra chave (`exclude`). `bind_tools` e `with_structured_output` funcionam como no LangChain.
 
 ### Guardrail
 

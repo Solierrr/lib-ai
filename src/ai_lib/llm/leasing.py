@@ -1,30 +1,20 @@
-import os
 from collections.abc import Awaitable, Callable
 from typing import TypeVar
 
-from ai_lib.llm.env_keys import EnvKeyClient, configured_providers
+from ai_lib.llm.env_keys import EnvKeyClient
 from ai_lib.llm.errors import classify_key_failure
-from ai_lib.registry import KeyLease, Provider, Purpose, RegistryClient
+from ai_lib.registry import KeyLease, Provider, Purpose
 
 T = TypeVar("T")
 
-_default_client: RegistryClient | EnvKeyClient | None = None
+_default_client: EnvKeyClient | None = None
 
 
-def _use_env_keys() -> bool:
-    source = (os.environ.get("LLM_KEYS_SOURCE") or "").strip().lower()
-    if source:
-        return source == "env"
-    registry_configured = bool(
-        os.environ.get("REGISTRY_URL") and os.environ.get("REGISTRY_CONSUMER_TOKEN")
-    )
-    return not registry_configured and bool(configured_providers())
-
-
-def default_client() -> RegistryClient | EnvKeyClient:
+def default_client() -> EnvKeyClient:
+    """Cliente de chaves do processo: lê `<PROVEDOR>_API_KEY` do ambiente, uma vez só."""
     global _default_client
     if _default_client is None:
-        _default_client = EnvKeyClient() if _use_env_keys() else RegistryClient.from_env()
+        _default_client = EnvKeyClient()
     return _default_client
 
 
@@ -39,7 +29,7 @@ class KeyLeaser:
         *,
         provider: Provider,
         purpose: Purpose | None = None,
-        client: RegistryClient | EnvKeyClient | None = None,
+        client: EnvKeyClient | None = None,
         max_key_attempts: int = 3,
         report_success: bool = True,
     ) -> None:
@@ -49,7 +39,7 @@ class KeyLeaser:
         self.max_key_attempts = max_key_attempts
         self.report_success = report_success
 
-    def _client(self) -> RegistryClient | EnvKeyClient:
+    def _client(self) -> EnvKeyClient:
         return self.client or default_client()
 
     def run(self, operation: Callable[[KeyLease], T]) -> T:
