@@ -1,10 +1,10 @@
 # ai-lib
 
-Blocos compartilhados dos serviços de IA da Solaria. Publicado no PyPI como `solaria-network-ai-lib`; o import é `ai_lib`. Requer Python 3.14 ou superior.
+Blocos compartilhados dos serviços de IA da Solaria. Publicado no PyPI como `solaria-network`; o import é `ai_lib`. Requer Python 3.14 ou superior.
 
 ```bash
-pip install solaria-network-ai-lib
-pip install "solaria-network-ai-lib[a2a]"   # para usar ai_lib.a2a
+pip install solaria-network
+pip install "solaria-network[a2a]"   # para usar ai_lib.a2a
 ```
 
 ## O que tem

@@ -1,7 +1,7 @@
 from importlib.metadata import PackageNotFoundError, version
 
 try:
-    __version__ = version("solaria-network-ai-lib")
+    __version__ = version("solaria-network")
 except PackageNotFoundError:
     __version__ = "0.0.0"
 
