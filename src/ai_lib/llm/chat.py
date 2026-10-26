@@ -9,6 +9,7 @@ from langchain_core.outputs import ChatGeneration, ChatResult
 from langchain_core.runnables import Runnable, RunnableConfig, RunnableLambda
 from pydantic import ConfigDict, Field
 
+from ai_lib.llm.content import flatten_content
 from ai_lib.llm.env_keys import EnvKeyClient, provider_order
 from ai_lib.llm.leasing import KeyLeaser
 from ai_lib.registry import KeyLease, Provider, Purpose
@@ -149,7 +150,7 @@ class LeasedChatModel(BaseChatModel):
         message = self._leaser.run(
             lambda lease: self._inner(lease).invoke(messages, stop=stop, **kwargs)
         )
-        return ChatResult(generations=[ChatGeneration(message=message)])
+        return ChatResult(generations=[ChatGeneration(message=flatten_content(message))])
 
     async def _agenerate(
         self,
@@ -162,7 +163,7 @@ class LeasedChatModel(BaseChatModel):
             return await self._inner(lease).ainvoke(messages, stop=stop, **kwargs)
 
         message = await self._leaser.arun(operation)
-        return ChatResult(generations=[ChatGeneration(message=message)])
+        return ChatResult(generations=[ChatGeneration(message=flatten_content(message))])
 
 
 def get_chat_model(

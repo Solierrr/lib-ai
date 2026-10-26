@@ -263,3 +263,24 @@ def test_classify_follows_the_cause_chain_and_reads_retry_after():
     assert failure is not None
     assert failure.outcome == "rate_limited"
     assert failure.retry_after == 12.0
+
+
+class BlockInner(FakeInner):
+    def _generate(self, messages, stop=None, run_manager=None, **kwargs):
+        return ChatResult(
+            generations=[
+                ChatGeneration(message=AIMessage(content=[{"type": "text", "text": "resposta"}]))
+            ]
+        )
+
+
+def test_block_content_is_flattened_to_a_string(monkeypatch):
+    def builder(lease, model, temperature, kwargs):
+        return BlockInner(api_key=lease.api_key)
+
+    monkeypatch.setitem(chat_module.BUILDERS, "gemini", builder)
+    registry = FakeRegistry({"gemini": ["a"]})
+
+    result = get_chat_model("gemini", client=registry).invoke("hi")
+
+    assert result.content == "resposta"
