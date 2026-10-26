@@ -1,18 +1,51 @@
 name: Publish PyPI package
 
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: pypi-publish
+  cancel-in-progress: false
+
 jobs:
+  check:
+    name: Check the version on PyPI
+    runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.version.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check whether this version is already on PyPI
+        id: version
+        run: |
+          name=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['name'])")
+          version=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          status=$(curl -s -o /dev/null -w '%{http_code}' "https://pypi.org/pypi/$name/$version/json")
+          if [ "$status" = "200" ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "$name $version já está no PyPI, nada a publicar."
+          elif [ "$status" = "404" ]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "$name $version ainda não está no PyPI, será publicado."
+          else
+            echo "Não foi possível consultar o PyPI (HTTP $status)."
+            exit 1
+          fi
+
   build:
     name: Build distribution
+    needs: check
+    if: needs.check.outputs.publish == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Check out release tag
+      - name: Check out the repository
         uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
@@ -37,7 +70,8 @@ jobs:
 
   publish:
     name: Publish to PyPI
-    needs: build
+    needs: [check, build]
+    if: needs.check.outputs.publish == 'true'
     runs-on: ubuntu-latest
     environment:
       name: pypi
