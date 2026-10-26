@@ -1288,7 +1288,7 @@ wheels = [
 ]
 
 [[package]]
-name = "solaria-lib"
+name = "solaria-network-ai-lib"
 version = "0.1.1"
 source = { editable = "." }
 dependencies = [
@@ -1336,7 +1336,7 @@ requires-dist = [
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=5" },
     { name = "respx", marker = "extra == 'dev'", specifier = ">=0.22" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.8" },
-    { name = "solaria-lib", extras = ["a2a"], marker = "extra == 'dev'" },
+    { name = "solaria-network-ai-lib", extras = ["a2a"], marker = "extra == 'dev'" },
 ]
 provides-extras = ["a2a", "dev"]
 
