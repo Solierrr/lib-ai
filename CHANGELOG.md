@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/Solierrr/lib-ai/compare/v0.2.0...v0.2.1) (2026-10-26)
+
+
+### Bug Fixes
+
+* return gemini text blocks as a plain string ([#14](https://github.com/Solierrr/lib-ai/issues/14)) ([1689321](https://github.com/Solierrr/lib-ai/commit/16893217b9ea58f016de1a7a7aa393ea329493ef))
+
 ## [0.2.0](https://github.com/Solierrr/lib-ai/compare/v0.1.1...v0.2.0) (2026-10-26)
 
 
