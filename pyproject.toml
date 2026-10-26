@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "solaria-lib"
+name = "solaria-network"
 version = "0.1.1"
 description = "Shared building blocks for the Solaria AI services"
 readme = "README.md"
@@ -27,7 +27,7 @@ a2a = [
   "fastapi>=0.115,<1",
 ]
 dev = [
-  "solaria-lib[a2a]",
+  "solaria-network[a2a]",
   "langchain>=1.0,<2",
   "pytest>=8",
   "pytest-asyncio>=0.24",
