@@ -1,74 +1,37 @@
-# ai-lib
+<p align="center">
+  <img src="./assets/readme/banners/pypi.png" alt="PyPI" width="100%">
+</p>
 
-Blocos compartilhados dos serviços de IA da Solaria. Publicado no PyPI como `solaria-network`; o import é `ai_lib`. Requer Python 3.14 ou superior.
+<p align="center">
+  <img src="./assets/readme/stacks/python.png" width="100" hspace="8" alt="Python" title="Python">
+  <img src="./assets/readme/stacks/pydantic.png" width="100" hspace="8" alt="Pydantic" title="Pydantic">
+  <img src="./assets/readme/stacks/langchain.png" width="100" hspace="8" alt="LangChain" title="LangChain">
+</p>
 
-```bash
-pip install solaria-network
-pip install "solaria-network[a2a]"   # para usar ai_lib.a2a
-```
+# Blocos compartilhados dos assistentes
 
-## O que tem
+[![License](https://img.shields.io/github/license/Solierrr/lib-ai)](https://github.com/Solierrr/lib-ai/blob/main/LICENSE)
+[![GitHub Last Commit](https://img.shields.io/github/last-commit/Solierrr/lib-ai)](https://github.com/Solierrr/lib-ai/commits)
+[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/Solierrr/lib-ai)](https://github.com/Solierrr/lib-ai/pulls)
+[![Release](https://img.shields.io/github/v/release/Solierrr/lib-ai)](https://github.com/Solierrr/lib-ai/releases)
 
-| Módulo | Conteúdo |
-|---|---|
-| `ai_lib.registry` | Tipos e erros das chaves de LLM (`KeyLease`, `Provider`, `RegistryKeysNotConfigured`...); o nome é herança da época em que as chaves vinham do `google-registry` |
-| `ai_lib.llm` | Chat model LangChain que pega uma chave do ambiente a cada chamada (`EnvKeyClient`, com rodízio e descanso em 429), `LeasedEmbeddings`, tabela de preços |
-| `ai_lib.guardrails` | Anonimização de PII, detecção de injection, parsers de veredito e nós LangGraph de entrada, saída e juiz |
-| `ai_lib.security` | `decode_user_id` (JWT RS256 via JWKS) |
-| `ai_lib.observability` | `StepTracker`, callback LangChain que mede custo, tokens e latência |
-| `ai_lib.a2a` | Agent2Agent 1.0 (extra `a2a`): `build_agent_card`, `TurnExecutor` e `mount_a2a` para receber delegações, `delegate` para delegar repassando o JWT do usuário e a persona |
+Esta biblioteca reúne os componentes usados pelos assistentes da plataforma para conversar, revisar solicitações e encaminhar tarefas. Ela atende às equipes que mantêm esses serviços e precisam aplicar as mesmas regras de proteção de dados, uso de provedores e medição das chamadas. Não oferece uma tela própria. Seu comportamento aparece nas respostas e nas delegações dos assistentes que a incorporam.
 
-## Configuração
+Os serviços Python usam LangChain e LangGraph para combinar modelos, ferramentas e etapas de revisão. A biblioteca fornece seleção de credenciais, alternativas entre provedores, leitura de JWT e comunicação entre agentes. As credenciais vêm do ambiente de cada serviço. O armazenamento das conversas e a autorização das operações continuam sob responsabilidade de quem usa os componentes.
 
-As chaves vêm do ambiente (no Solaria, do Infisical), uma por provedor:
+## Aprofunde-se no Projeto!
 
-| Variável | Uso |
-|---|---|
-| `GEMINI_API_KEY`, `GROQ_API_KEY`, `OPENAI_API_KEY` | Chave de cada provedor (também `<PROVEDOR>_API_KEY_2` a `_9` e `<PROVEDOR>_API_KEYS`, separadas por vírgula) |
-| `LLM_PROVIDER_ORDER` | Ordem de uso e de fallback entre provedores, por exemplo `gemini,groq,openai` |
-| `LLM_MODEL_OPENAI` | Modelo do provedor OpenAI (obrigatório para usá-lo) |
+- [OVERVIEW.md](./docs/OVERVIEW.md), capacidades e regras dos componentes.
+- [ARCHITECTURE.md](./docs/ARCHITECTURE.md), módulos e integrações.
+- [RUNNING.md](./docs/RUNNING.md), configuração e testes locais.
+- [API.md](./docs/API.md), interface Python e delegação.
+- [DEPLOY.md](./docs/DEPLOY.md), distribuição do pacote.
+- [STATUS.md](./docs/STATUS.md), diferenças e limitações.
+- [Fluxos](./flows/), credenciais, revisão, delegação e publicação.
+- [PENDENCIAS.md](./PENDENCIAS.md), confirmações do responsável.
 
-Sem chave para o provedor pedido, a chamada falha com `RegistryKeysNotConfigured`.
+## Contribuindo
 
-## Uso
-
-```python
-from ai_lib.llm import get_chat_model, get_chat_model_with_fallback
-
-llm = get_chat_model_with_fallback()
-llm.invoke("olá")
-
-groq = get_chat_model("groq", model="openai/gpt-oss-120b")
-structured = get_chat_model("gemini", purpose="vision").with_structured_output(MySchema)
-```
-
-Cada chamada pede uma chave, reporta `ok`, `rate_limited` ou `invalid` ao `EnvKeyClient` e, em 429, repete com outra chave (`exclude`). `bind_tools` e `with_structured_output` funcionam como no LangChain.
-
-### Guardrail
-
-```python
-from ai_lib.guardrails import (
-    build_input_prompt,
-    build_judge_prompt,
-    build_output_prompt,
-    make_input_guardrail_node,
-    make_judge_node,
-    make_output_guardrail_node,
-)
-
-input_node = make_input_guardrail_node(prompt=build_input_prompt("Solaria", "energia solar"))
-output_node = make_output_guardrail_node(prompt=build_output_prompt("Solaria", "energia solar"))
-judge_node = make_judge_node(prompt=build_judge_prompt("Solaria", "energia solar"))
-```
-
-O estado do grafo estende `ai_lib.guardrails.GuardrailState`. Serviço com necessidade específica passa o próprio prompt (string com `{mensagem}` ou `{resposta}`) ou mantém o nó próprio.
-
-## Desenvolvimento
-
-```bash
-uv sync --frozen --extra dev   # ou: pip install -e ".[dev]"
-ruff check . && ruff format --check .
-pytest
-```
-
-Commits seguem `tipo: mensagem` (inglês, minúsculo). O versionamento é feito pelo `release-please`; o comando `/release` na PR de release publica no GitHub e o `publish.yml` envia ao PyPI por Trusted Publishing (ambiente `pypi`).
+- [CONTRIBUTING.md](https://github.com/Solierrr/.github/blob/main/.github/CONTRIBUTING.md), convenções de contribuição.
+- [CODE_OF_CONDUCT.md](https://github.com/Solierrr/.github/blob/main/CODE_OF_CONDUCT.md), código de conduta.
+- [SECURITY.md](https://github.com/Solierrr/.github/blob/main/SECURITY.md), reporte de vulnerabilidade.
