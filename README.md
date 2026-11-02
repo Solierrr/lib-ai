@@ -28,7 +28,6 @@ Os serviços Python usam LangChain e LangGraph para combinar modelos, ferramenta
 - [DEPLOY.md](./docs/DEPLOY.md), distribuição do pacote.
 - [STATUS.md](./docs/STATUS.md), diferenças e limitações.
 - [Fluxos](./flows/), credenciais, revisão, delegação e publicação.
-- [PENDENCIAS.md](./PENDENCIAS.md), confirmações do responsável.
 
 ## Contribuindo
 
